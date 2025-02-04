@@ -8,7 +8,7 @@
 #include <utility>
 #include <limits>
 #include <stdexcept>
-#include <string>
+#include <iostream>
 
 template <typename T>
 class Edge;
@@ -56,7 +56,7 @@ private:
 
 public:
     Edge(int weight, const ShrdPtr<Node<T>>& fromNode, const ShrdPtr<Node<T>>& toNode)
-        : weight_(weight), fromNode_(fromNode), toNode_(toNode) {}
+            : weight_(weight), fromNode_(fromNode), toNode_(toNode) {}
 
     int getWeight() const { return weight_; }
     ShrdPtr<Node<T>> getFromNode() const { return fromNode_; }
@@ -101,23 +101,6 @@ public:
     const DynamicArraySmart<ShrdPtr<Edge<T>>>& getEdges() const { return edges_; }
 };
 
-class Dijkstra {
-public:
-    template <typename T>
-    static DynamicArraySmart<ShrdPtr<Edge<T>>> findShortestPath(const ShrdPtr<Node<T>>& startNode, const ShrdPtr<Node<T>>& targetNode);
-};
-
-class BellmanFord {
-public:
-    template <typename T>
-    static DynamicArraySmart<ShrdPtr<Edge<T>>> findShortestPath(
-            const ShrdPtr<Node<T>>& startNode,
-            const ShrdPtr<Node<T>>& targetNode,
-            const DynamicArraySmart<ShrdPtr<Edge<T>>>& edges,
-            const DynamicArraySmart<ShrdPtr<Node<T>>>& nodes
-    );
-};
-
 template <typename T>
 void Graph<T>::removeNode(const T& nodeName) {
     ShrdPtr<Node<T>> nodeToRemove;
@@ -137,21 +120,6 @@ void Graph<T>::removeNode(const T& nodeName) {
         if (edges_[i]->getFromNode() == nodeToRemove || edges_[i]->getToNode() == nodeToRemove) {
             edges_.RemoveAt(i);
         }
-    }
-}
-
-template <typename T>
-void Graph<T>::displayGraph() const {
-    std::cout << "=== Graph Structure ===\n";
-    std::cout << "Nodes:\n";
-    for (const auto& node : nodes_) {
-        std::cout << "- " << node->getName() << "\n";
-    }
-
-    std::cout << "Edges:\n";
-    for (const auto& edge : edges_) {
-        std::cout << edge->getFromNode()->getName() << " --(" << edge->getWeight()
-                  << ")--> " << edge->getToNode()->getName() << "\n";
     }
 }
 
@@ -184,3 +152,36 @@ void Graph<T>::removeEdge(const T& fromNode, const T& toNode) {
         }
     }
 }
+
+template <typename T>
+void Graph<T>::displayGraph() const {
+    std::cout << "=== Graph Structure ===\n";
+    std::cout << "Nodes:\n";
+    for (const auto& node : nodes_) {
+        std::cout << "- " << node->getName() << "\n";
+    }
+
+    std::cout << "Edges:\n";
+    for (const auto& edge : edges_) {
+        std::cout << edge->getFromNode()->getName() << " --(" << edge->getWeight()
+                  << ")--> " << edge->getToNode()->getName() << "\n";
+    }
+}
+
+// Shortest Path Algorithms
+class Dijkstra {
+public:
+    template <typename T>
+    static DynamicArraySmart<ShrdPtr<Edge<T>>> findShortestPath(const ShrdPtr<Node<T>>& startNode, const ShrdPtr<Node<T>>& targetNode);
+};
+
+class BellmanFord {
+public:
+    template <typename T>
+    static DynamicArraySmart<ShrdPtr<Edge<T>>> findShortestPath(
+            const ShrdPtr<Node<T>>& startNode,
+            const ShrdPtr<Node<T>>& targetNode,
+            const DynamicArraySmart<ShrdPtr<Edge<T>>>& edges,
+            const DynamicArraySmart<ShrdPtr<Node<T>>>& nodes
+    );
+};

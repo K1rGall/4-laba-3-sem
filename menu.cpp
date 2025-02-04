@@ -1,7 +1,6 @@
 #include "menu.h"
 #include "DifferentStructures/Graph.h"
 #include <iostream>
-#include <chrono>
 #include <fstream>
 #include "tests.h"
 #include <cstdlib>
@@ -13,68 +12,75 @@ void displayGraph(const Graph<std::string>& graph) {
     outFile << "import matplotlib.pyplot as plt\n";
     outFile << "G = nx.MultiDiGraph()\n";
 
-// Adding nodes
     for (int i = 0; i < graph.getNodes().GetLength(); ++i) {
         auto& node = graph.getNodes()[i];
         outFile << "G.add_node(\"" << node->getName() << "\")\n";
     }
 
-// Adding edges with varying curvature
     outFile << "edge_curvatures = {}\n";
+    outFile << "edge_labels = {}\n";
+    outFile << "edge_count = {}\n";
     for (int i = 0; i < graph.getEdges().GetLength(); ++i) {
         auto& edge = graph.getEdges()[i];
-        outFile << "G.add_edge(\"" << edge->getFromNode()->getName() << "\", \""
-                << edge->getToNode()->getName() << "\", weight=" << edge->getWeight()
+        std::string from = edge->getFromNode()->getName();
+        std::string to = edge->getToNode()->getName();
+        std::string key = "(\"" + from + "\", \"" + to + "\")";
+
+        outFile << "edge_count.setdefault(" << key << ", 0)\n";
+        outFile << "curvature = 0.25 * (edge_count[" << key << "] % 2 * 2 - 1) * (edge_count[" << key << "] // 2 + 1)\n";
+
+        outFile << "G.add_edge(\"" << from << "\", \"" << to << "\", weight=" << edge->getWeight()
                 << ", key=" << i << ")\n";
-        outFile << "edge_curvatures[('" << edge->getFromNode()->getName() << "', '" << edge->getToNode()->getName() << "', " << i << ")] = " << (0.1 * (i % 5)) << "\n";
+
+        outFile << "edge_labels[(\"" << from << "\", \"" << to << "\", " << i << ")] = " << edge->getWeight() << "\n";
+        outFile << "edge_count[" << key << "] += 1\n";
     }
 
-    outFile << "pos = nx.circular_layout(G)\n";
-    outFile << "weights = nx.get_edge_attributes(G, 'weight')\n";
-    outFile << "edge_styles = [f'arc3,rad={edge_curvatures[edge]}' for edge in G.edges(keys=True)]\n";
-    outFile << "nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=200, font_size=15, connectionstyle=edge_styles)\n";
-    outFile << "nx.draw_networkx_edge_labels(G, pos, edge_labels=weights)\n";
+    outFile << "pos = nx.spring_layout(G)\n";
+    outFile << "plt.figure(figsize=(8, 6))\n";
+    outFile << "for edge in G.edges(keys=True):\n";
+    outFile << "    curvature = edge_curvatures.get(edge, 0)\n";
+    outFile << "    nx.draw_networkx_edges(G, pos, edgelist=[edge], connectionstyle=f'arc3,rad={curvature}')\n";
+    outFile << "nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=200, font_size=15)\n";
+    outFile << "nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=12, bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3'))\n";
     outFile << "plt.show()\n";
 
-
     outFile.close();
-
     system("graph_output.py");
 }
 
+
 void generateRandomGraph(Graph<std::string>& graph, int vertexCount, int edgesPerVertex) {
-    // Удаление всех рёбер
+
     while (graph.getEdges().GetLength() > 0) {
         // Удаляем первое ребро из графа, пока не очистим все
         auto& edge = graph.getEdges()[0];
         graph.removeEdge(edge->getFromNode()->getName(), edge->getToNode()->getName());
     }
 
-    // Удаление всех вершин
     while (graph.getNodes().GetLength() > 0) {
-        // Удаляем первую вершину из графа, пока не очистим все
+
         auto& node = graph.getNodes()[0];
         graph.removeNode(node->getName());
     }
 
-    // Генерация новых вершин
     for (int i = 0; i < vertexCount; ++i) {
         graph.createNode("Node" + std::to_string(i));
     }
 
-    // Генерация рёбер
-    std::srand(std::time(0)); // Seed для генератора случайных чисел
+
+    std::srand(std::time(0));
     for (int i = 0; i < vertexCount; ++i) {
         int edgesCreated = 0;
         while (edgesCreated < edgesPerVertex) {
             int targetNodeIndex = std::rand() % vertexCount;
-            // Избегаем петель (если i == targetNodeIndex)
+
             if (i != targetNodeIndex) {
-                int weight = std::rand() % 100 + 1;  // Случайный вес от 1 до 100
+                int weight = std::rand() % 100 + 1;
                 auto fromNode = graph.getNodes()[i];
                 auto toNode = graph.getNodes()[targetNodeIndex];
                 graph.createEdge(weight, fromNode, toNode);
-                ++edgesCreated;  // Увеличиваем счётчик рёбер
+                ++edgesCreated;
             }
         }
     }
@@ -267,9 +273,9 @@ void menu() {
 
         else if (choice == 9) {
             int vertexCount, edgesPerVertex;
-            std::cout << "Enter the number of vertices: ";
+            std::cout << "Enter the number of nodes: ";
             std::cin >> vertexCount;
-            std::cout << "Enter the number of edges per vertex: ";
+            std::cout << "Enter the number of edges per node: ";
             std::cin >> edgesPerVertex;
 
             generateRandomGraph(graph, vertexCount, edgesPerVertex);
