@@ -89,6 +89,7 @@ public:
         auto edge = ShrdPtr<Edge<T>>(new Edge<T>(weight, fromNode, toNode));
         edges_.Append(edge);
         fromNode->addEdge(edge);
+        toNode->addEdge(edge);
         return edge;
     }
 

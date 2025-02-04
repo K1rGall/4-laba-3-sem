@@ -11,27 +11,31 @@ void displayGraph(const Graph<std::string>& graph) {
     std::ofstream outFile("graph_output.py");
     outFile << "import networkx as nx\n";
     outFile << "import matplotlib.pyplot as plt\n";
-    outFile << "G = nx.DiGraph()\n";
+    outFile << "G = nx.MultiDiGraph()\n";
 
-    // Добавление узлов
+// Adding nodes
     for (int i = 0; i < graph.getNodes().GetLength(); ++i) {
         auto& node = graph.getNodes()[i];
         outFile << "G.add_node(\"" << node->getName() << "\")\n";
     }
 
-    // Добавление рёбер
+// Adding edges with varying curvature
+    outFile << "edge_curvatures = {}\n";
     for (int i = 0; i < graph.getEdges().GetLength(); ++i) {
         auto& edge = graph.getEdges()[i];
         outFile << "G.add_edge(\"" << edge->getFromNode()->getName() << "\", \""
-                << edge->getToNode()->getName() << "\", weight="
-                << edge->getWeight() << ")\n";
+                << edge->getToNode()->getName() << "\", weight=" << edge->getWeight()
+                << ", key=" << i << ")\n";
+        outFile << "edge_curvatures[('" << edge->getFromNode()->getName() << "', '" << edge->getToNode()->getName() << "', " << i << ")] = " << (0.1 * (i % 5)) << "\n";
     }
 
-    outFile << "pos = nx.spring_layout(G)\n";
+    outFile << "pos = nx.circular_layout(G)\n";
     outFile << "weights = nx.get_edge_attributes(G, 'weight')\n";
-    outFile << "nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=200, font_size=15)\n";
+    outFile << "edge_styles = [f'arc3,rad={edge_curvatures[edge]}' for edge in G.edges(keys=True)]\n";
+    outFile << "nx.draw(G, pos, with_labels=True, node_color='skyblue', edge_color='black', node_size=200, font_size=15, connectionstyle=edge_styles)\n";
     outFile << "nx.draw_networkx_edge_labels(G, pos, edge_labels=weights)\n";
     outFile << "plt.show()\n";
+
 
     outFile.close();
 
@@ -218,6 +222,7 @@ void menu() {
             } catch (const std::exception& e) {
                 std::cout << e.what() << "\n";
             }
+
 
         } else if (choice == 6) {
             std::string nodeName;
