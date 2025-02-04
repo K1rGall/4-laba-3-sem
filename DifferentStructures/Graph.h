@@ -5,7 +5,6 @@
 #include "HashTable.h"
 
 #include <functional>
-#include <queue>
 #include <utility>
 #include <limits>
 #include <stdexcept>
@@ -26,12 +25,14 @@ private:
     LinkedListSmart<ShrdPtr<Edge<T>>> edges_;
     T name_;
     static int nodeId_;
+    Graph<T>* graph_;
 
 public:
-    Node() { name_ = std::to_string(++nodeId_); }
-    explicit Node(T name) : name_(std::move(name)) {}
+    Node(Graph<T>* graph) : graph_(graph) { name_ = std::to_string(++nodeId_); }
+    explicit Node(T name, Graph<T>* graph) : name_(std::move(name)), graph_(graph) {}
 
     const T& getName() const { return name_; }
+    Graph<T>* getGraph() const { return graph_; }
 
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;
@@ -69,9 +70,8 @@ private:
     DynamicArraySmart<ShrdPtr<Edge<T>>> edges_;
 
 public:
-
     ShrdPtr<Node<T>> createNode(const T& nodeName) {
-        auto node = ShrdPtr<Node<T>>(new Node<T>(nodeName));
+        auto node = ShrdPtr<Node<T>>(new Node<T>(nodeName, this));
         nodes_.Append(node);
         return node;
     }
@@ -110,10 +110,10 @@ class BellmanFord {
 public:
     template <typename T>
     static DynamicArraySmart<ShrdPtr<Edge<T>>> findShortestPath(
-        const ShrdPtr<Node<T>>& startNode,
-        const ShrdPtr<Node<T>>& targetNode,
-        const DynamicArraySmart<ShrdPtr<Edge<T>>>& edges,
-        const DynamicArraySmart<ShrdPtr<Node<T>>>& nodes
+            const ShrdPtr<Node<T>>& startNode,
+            const ShrdPtr<Node<T>>& targetNode,
+            const DynamicArraySmart<ShrdPtr<Edge<T>>>& edges,
+            const DynamicArraySmart<ShrdPtr<Node<T>>>& nodes
     );
 };
 
@@ -138,6 +138,7 @@ void Graph<T>::removeNode(const T& nodeName) {
         }
     }
 }
+
 template <typename T>
 void Graph<T>::displayGraph() const {
     std::cout << "=== Graph Structure ===\n";

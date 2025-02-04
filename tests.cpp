@@ -53,6 +53,25 @@ std::pair<long long, long long> testPerformance(const int& numNodes, const int& 
     }
     return {dijkstraDuration, bellmanFordDuration};
 }
+void testNodeEdgeOperations() {
+    Graph<std::string> graph;
+    auto node1 = graph.createNode("Node1");
+    auto node2 = graph.createNode("Node2");
+    auto node3 = graph.createNode("Node3");
+
+    auto edge1 = graph.createEdge(10, node1, node2);
+    auto edge2 = graph.createEdge(20, node2, node3);
+    assert(graph.getNodes().GetLength() == 3);
+    assert(graph.getEdges().GetLength() == 2);
+
+    graph.removeEdge("Node1", "Node2");
+    assert(graph.getEdges().GetLength() == 1);
+
+    graph.removeNode("Node3");
+    assert(graph.getNodes().GetLength() == 2);
+
+    std::cout << "Node and Edge operations test passed!" << std::endl;
+}
 
 void testDijkstra() {
     Graph<std::string> graph;
@@ -141,7 +160,7 @@ void testBellmanFord() {
 
     try {
         auto cyclePath = BellmanFord::findShortestPath(n1, n3, negativeCycleGraph.getEdges(), negativeCycleGraph.getNodes());
-        std::cout << "Test failed. Expected exception due to negative cycle." << std::endl;
+        assert(false && "Test failed. Expected exception due to negative cycle.");
     } catch (const std::runtime_error& e) {
         assert(std::string(e.what()) == "Graph contains a negative-weight cycle");
         std::cout << "Bellman-Ford negative cycle test passed!" << std::endl;

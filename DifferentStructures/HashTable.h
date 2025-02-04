@@ -11,6 +11,10 @@
 #include <functional>
 #include <stdexcept>
 #include <type_traits>
+#include <limits>
+
+template <typename T>
+class Edge;
 
 template<typename T>
 class Node;
@@ -206,8 +210,16 @@ TElement HashTable<TKey, TElement>::Get(const TKey &key) const {
         }
     }
 
-    throw std::runtime_error("Key not found.");
+    // Возвращаем значение по умолчанию, чтобы избежать ошибки
+    if constexpr (std::is_same<TElement, int>::value) {
+        return std::numeric_limits<int>::max();
+    } else if constexpr (std::is_same<TElement, ShrdPtr<Edge<std::string>>>::value) {
+        return ShrdPtr<Edge<std::string>>(nullptr);
+    } else {
+        throw std::runtime_error("Key not found.");
+    }
 }
+
 
 template<typename TKey, typename TElement>
 void HashTable<TKey, TElement>::Rehash() {

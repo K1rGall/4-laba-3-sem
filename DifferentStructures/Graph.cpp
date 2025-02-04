@@ -3,19 +3,27 @@
 
 template<>
 DynamicArraySmart<ShrdPtr<Edge<std::string>>> Dijkstra::findShortestPath(const ShrdPtr<Node<std::string>>& startNode, const ShrdPtr<Node<std::string>>& targetNode) {
-    using NodeDist = std::pair<int, ShrdPtr<Node<std::string>>>;
-    auto cmp = [](const NodeDist& left, const NodeDist& right) { return left.first > right.first; };
-    std::priority_queue<NodeDist, std::vector<NodeDist>, decltype(cmp)> pq(cmp);
-
     HashTable<ShrdPtr<Node<std::string>>, int> distances;
     HashTable<ShrdPtr<Node<std::string>>, ShrdPtr<Edge<std::string>>> previousEdge;
+    DynamicArraySmart<ShrdPtr<Node<std::string>>> nodes;
 
     distances.Add(startNode, 0);
-    pq.push({0, startNode});
+    nodes.Append(startNode);
 
-    while (!pq.empty()) {
-        auto [currentDistance, currentNode] = pq.top();
-        pq.pop();
+    while (nodes.GetLength() > 0) {
+        ShrdPtr<Node<std::string>> currentNode = nodes[0];
+        int currentDistance = distances.Get(currentNode);
+        int indexToRemove = 0;
+
+        for (int i = 1; i < nodes.GetLength(); ++i) {
+            if (distances.Get(nodes[i]) < currentDistance) {
+                currentDistance = distances.Get(nodes[i]);
+                currentNode = nodes[i];
+                indexToRemove = i;
+            }
+        }
+
+        nodes.RemoveAt(indexToRemove);
 
         if (currentNode == targetNode) {
             break;
@@ -38,7 +46,7 @@ DynamicArraySmart<ShrdPtr<Edge<std::string>>> Dijkstra::findShortestPath(const S
                     previousEdge.Add(neighbor, edge);
                 }
 
-                pq.push({newDistance, neighbor});
+                nodes.Append(neighbor);
             }
         }
     }
@@ -46,7 +54,7 @@ DynamicArraySmart<ShrdPtr<Edge<std::string>>> Dijkstra::findShortestPath(const S
     DynamicArraySmart<ShrdPtr<Edge<std::string>>> shortestPath;
     ShrdPtr<Node<std::string>> currentNode = targetNode;
 
-    while (!(currentNode == startNode)) {
+    while (previousEdge.ContainsKey(currentNode)) {
         if (!previousEdge.ContainsKey(currentNode)) {
             return DynamicArraySmart<ShrdPtr<Edge<std::string>>>();
         }

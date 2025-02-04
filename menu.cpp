@@ -5,6 +5,7 @@
 #include <fstream>
 #include "tests.h"
 #include <cstdlib>
+#include <ctime>
 
 void displayGraph(const Graph<std::string>& graph) {
     std::ofstream outFile("graph_output.py");
@@ -34,7 +35,45 @@ void displayGraph(const Graph<std::string>& graph) {
 
     outFile.close();
 
-    system("C:\\Users\\Admin\\CLionProjects\\4-laba-3-sem\\cmake-build-debug\\graph_output.py");
+    system("graph_output.py");
+}
+
+void generateRandomGraph(Graph<std::string>& graph, int vertexCount, int edgesPerVertex) {
+    // Удаление всех рёбер
+    while (graph.getEdges().GetLength() > 0) {
+        // Удаляем первое ребро из графа, пока не очистим все
+        auto& edge = graph.getEdges()[0];
+        graph.removeEdge(edge->getFromNode()->getName(), edge->getToNode()->getName());
+    }
+
+    // Удаление всех вершин
+    while (graph.getNodes().GetLength() > 0) {
+        // Удаляем первую вершину из графа, пока не очистим все
+        auto& node = graph.getNodes()[0];
+        graph.removeNode(node->getName());
+    }
+
+    // Генерация новых вершин
+    for (int i = 0; i < vertexCount; ++i) {
+        graph.createNode("Node" + std::to_string(i));
+    }
+
+    // Генерация рёбер
+    std::srand(std::time(0)); // Seed для генератора случайных чисел
+    for (int i = 0; i < vertexCount; ++i) {
+        int edgesCreated = 0;
+        while (edgesCreated < edgesPerVertex) {
+            int targetNodeIndex = std::rand() % vertexCount;
+            // Избегаем петель (если i == targetNodeIndex)
+            if (i != targetNodeIndex) {
+                int weight = std::rand() % 100 + 1;  // Случайный вес от 1 до 100
+                auto fromNode = graph.getNodes()[i];
+                auto toNode = graph.getNodes()[targetNodeIndex];
+                graph.createEdge(weight, fromNode, toNode);
+                ++edgesCreated;  // Увеличиваем счётчик рёбер
+            }
+        }
+    }
 }
 
 void menu() {
@@ -53,7 +92,6 @@ void menu() {
     graph.createEdge(2, nodeD, nodeE);
     graph.createEdge(1, nodeC, nodeE);
 
-
     while (true) {
         std::cout << "\n=== Graph Menu ===\n";
         std::cout << "1. Display Graph\n";
@@ -64,7 +102,8 @@ void menu() {
         std::cout << "6. Remove Node\n";
         std::cout << "7. Remove Edge\n";
         std::cout << "8. Run Tests\n";
-        std::cout << "9. Exit\n";
+        std::cout << "9. Generate Random Graph\n";
+        std::cout << "10. Exit\n";
         std::cout << "Choose an option: ";
 
         int choice;
@@ -192,11 +231,10 @@ void menu() {
             std::cout << "Enter end node to remove: ";
             std::cin >> toNode;
             graph.removeEdge(fromNode, toNode);
-        }
-        else if (choice == 8) {
+        } else if (choice == 8) {
             testDijkstra();
             testBellmanFord();
-
+            testNodeEdgeOperations();
             std::cout << "\nPerformance Test:\n";
 
             std::vector<std::pair<std::pair<long long, long long>, long long>> tests = {
@@ -223,6 +261,19 @@ void menu() {
         }
 
         else if (choice == 9) {
+            int vertexCount, edgesPerVertex;
+            std::cout << "Enter the number of vertices: ";
+            std::cin >> vertexCount;
+            std::cout << "Enter the number of edges per vertex: ";
+            std::cin >> edgesPerVertex;
+
+            generateRandomGraph(graph, vertexCount, edgesPerVertex);
+            std::cout << "Random graph generated with " << vertexCount << " vertices and "
+                      << edgesPerVertex << " edges per vertex.\n";
+
+        }
+
+        else if (choice == 10) {
             break;
 
         } else {
